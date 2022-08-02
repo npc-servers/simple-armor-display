@@ -1,67 +1,48 @@
-if SERVER then
-	print( "Simple Armor Display loaded" )
-end
+local IsValid = IsValid
+local nameFont = "TargetID"
+local healthFont = "TargetIDSmall"
+local draw_SimpleText = draw.SimpleText
 
-if CLIENT then
-	hook.Add( "HUDDrawTargetID", "SimpleArmorDisplay", function()
-   	 return false
-	end)
+local shadow1 = Color( 0, 0, 0, 120 )
+local shadow2 = Color( 0, 0, 0, 50 )
 
-	hook.Add( "HUDPaint", "SimpleArmorDisplay", function()
-    
---[[    local tr = util.GetPlayerTrace( LocalPlayer() )
-		local trace = util.TraceLine( tr )
-		if ( !trace.Hit ) then return end
-		if ( !trace.HitNonWorld ) then return end ]]--
-		local z = LocalPlayer():GetEyeTrace().Entity
-		if z:IsValid() and z:IsPlayer() and z:Alive() and z:GetRenderMode() != RENDERMODE_TRANSALPHA then
-      
-		local text = "ERROR"
-		local font = "TargetID"
-	
-		if ( z:IsPlayer() ) then
-			text = z:Nick()
-		else
-			return
-			--text = trace.Entity:GetClass()
-		end
-	
-		surface.SetFont( font )
-		local w, h = surface.GetTextSize( text )
-	
-		local MouseX, MouseY = gui.MousePos()
-	
-		if ( MouseX == 0 && MouseY == 0 ) then
-	
-			MouseX = ScrW() / 2
-			MouseY = ScrH() / 2
-	
-		end
-	
-		local x = MouseX
-		local y = MouseY
-	
-		x = x - w / 2
-		y = y + 30
+hook.Add( "HUDDrawTargetID", "SimpleArmorDisplay", function()
+    return false
+end )
 
-		-- The fonts internal drop shadow looks lousy with AA on
-		draw.SimpleText( text, font, x + 1, y + 1, Color( 0, 0, 0, 120 ) )
-		draw.SimpleText( text, font, x + 2, y + 2, Color( 0, 0, 0, 50 ) )
-		draw.SimpleText( text, font, x, y, team.GetColor(z:Team()) )
-	
-		y = y + h + 5
-	
-		local text = z:Health() .. "%    " .. z:Armor() .. "%"
-		local font = "TargetIDSmall"
-	
-		surface.SetFont( font )
-		local w, h = surface.GetTextSize( text )
-		local x = MouseX - w / 2
-	
-		draw.SimpleText( text, font, x + 1, y + 1, Color( 0, 0, 0, 120 ) )
-		draw.SimpleText( text, font, x + 2, y + 2, Color( 0, 0, 0, 50 ) )
-		draw.SimpleText( text, font, x, y, team.GetColor(z:Team()) )
+hook.Add( "HUDPaint", "SimpleArmorDisplay", function()
+    local aimEnt = LocalPlayer():GetEyeTrace().Entity
+    if not IsValid( aimEnt ) then return end
+    if not aimEnt:IsPlayer() then return end
+    if not aimEnt:Alive() then return end
+    if aimEnt:GetRenderMode() == RENDERMODE_TRANSALPHA then return end
 
-		end
-	end )
-end
+    local nameText = aimEnt:GetName()
+
+    surface.SetFont( nameFont )
+    local nameW, nameH = surface.GetTextSize( nameText )
+    local mouseX, mouseY = gui.MousePos()
+
+    if mouseX == 0 and mouseY == 0 then
+        mouseX = ScrW() / 2
+        mouseY = ScrH() / 2
+    end
+
+    local nameX = mouseX - nameW / 2
+    local nameY = mouseY + 30
+
+    draw_SimpleText( nameText, nameFont, nameX + 1, nameY + 1, shadow1 )
+    draw_SimpleText( nameText, nameFont, nameX + 2, nameY + 2, shadow2 )
+    draw_SimpleText( nameText, nameFont, nameX, nameY, team.GetColor( aimEnt:Team() ) )
+
+    local healthPosY = nameY + nameH + 5
+    local healthText = aimEnt:Health() .. "%  " .. aimEnt:Armor() .. "%"
+
+    surface.SetFont( healthFont )
+    local armorW = surface.GetTextSize( healthText )
+    local healthPosX = mouseX - armorW / 2
+
+    draw_SimpleText( healthText, healthFont, healthPosX + 1, healthPosY + 1, shadow1 )
+    draw_SimpleText( healthText, healthFont, healthPosX + 2, healthPosY + 2, shadow2 )
+    draw_SimpleText( healthText, healthFont, healthPosX, healthPosY, team.GetColor( aimEnt:Team() ) )
+end )
